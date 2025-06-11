@@ -5,9 +5,10 @@ from confluent_kafka.schema_registry.avro import AvroSerializer
 import json
 import time
 from datetime import datetime
+import os
 
 # Initialize Finnhub client
-finnhub_client = finnhub.Client(api_key="d141cl1r01qs7glkgtt0d141cl1r01qs7glkgttg")
+finnhub_client = finnhub.Client(api_key=os.getenv("FINNHUB_API_KEY"))
 
 #kafka configuration
 kafka_config = {

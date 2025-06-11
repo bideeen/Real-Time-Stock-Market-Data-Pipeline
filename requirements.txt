@@ -1,0 +1,6 @@
+apache-airflow
+finnhub-python 
+confluent-kafka 
+avro-python3
+snowflake-connector-python
+pandas

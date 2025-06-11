@@ -1,21 +1,12 @@
-version: '3.8'
+version: '3.9'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
-    hostname: zookeeper
-    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    healthcheck:
-      test: ["CMD", "echo ruok | nc localhost 2181 | grep imok"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-     
     ports:
       - "2181:2181"
-    
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -29,39 +20,11 @@ services:
     ports:
       - "9092:9092"
 
-  schema-registry:
-    image: confluentinc/cp-schema-registry:latest
-    hostname: schema-registry
-    container_name: schema-registry
-    depends_on:
-      - kafka
-      - zookeeper
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
-    ports:
-      - "8081:8081"
-    
-
-  control-center:
-    image: confluentinc/cp-enterprise-control-center:latest
-    depends_on:
-      - kafka
-      - zookeeper
-    environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka:9092
-      CONTROL_CENTER_ZOOKEEPER_CONNECT: zookeeper:2181
-      CONTROL_CENTER_REPLICATION_FACTOR: 1
-      CONTROL_CENTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-    ports:
-      - "9021:9021"
-    
-
   airflow:
-    image: apache/airflow:2.7.3
+    image: apache/airflow:latest
     environment:
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -70,8 +33,7 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
-    command: >
-      bash -c "pip install finnhub-python confluent-kafka avro-python3 snowflake-connector-python pandas && airflow db init && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver & airflow scheduler"
+    command: standalone 
 
   postgres:
     image: postgres:17
@@ -81,6 +43,25 @@ services:
       POSTGRES_DB: airflow
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  python-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+    environment:
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY}
+      SNOWFLAKE_USER: ${SNOWFLAKE_USER}
+      SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD}
+      SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT}
+      SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
+      SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
+      SNOWFLAKE_SCHEMA: ${SNOWFLAKE_SCHEMA}
+    volumes:
+      - /workspaces/Real-Time-Stock-Market-Data-Pipeline:/app
 
 volumes:
   postgres_data:

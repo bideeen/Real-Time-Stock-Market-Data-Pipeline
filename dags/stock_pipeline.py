@@ -10,11 +10,11 @@ default_args = {
 }
 
 def run_producer():
-    subprocess.run(['python', '/opt/airflow/dags/producers.py'], check=True)
+    subprocess.run(['python', '/app/producers.py'], check=True)
 
 
 def run_consumers():
-    subprocess.run(['python', '/opt/airflow/dags/consumers.py'], check=True)
+    subprocess.run(['python', '/app/consumers.py'], check=True)
     
 
 with DAG(

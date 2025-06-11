@@ -3,6 +3,8 @@ from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 import snowflake.connector
 import pandas as pd
+import os
+
 
 # Kafka configuration
 kafka_config = {
@@ -19,12 +21,12 @@ avro_deserializer = AvroDeserializer(schema_registry_client)
 
 # Snowflake connection
 snowflake_conn = snowflake.connector.connect(
-    user='YOUR_SNOWFLAKE_USER',
-    password='YOUR_SNOWFLAKE_PASSWORD',
-    account='YOUR_SNOWFLAKE_ACCOUNT',
-    warehouse='COMPUTE_WH',
-    database='stock_market',
-    schema='pipeline'
+    user=os.getenv("SNOWFLAKE_USER"),
+    password=os.getenv("SNOWFLAKE_PASSWORD"),
+    account=os.getenv("SNOWFLAKE_ACCOUNT"),
+    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+    database=os.getenv("SNOWFLAKE_DATABASE"),
+    schema=os.getenv("SNOWFLAKE_SCHEMA")
 )
 
 # Moving average calculation
